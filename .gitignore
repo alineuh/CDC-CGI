@@ -100,3 +100,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Données sensibles + sorties
+/data/pdfs/
+/data/json/
+
+# Environnement virtuel
+/paie/
+
+# Python
+__pycache__/
+*.pyc

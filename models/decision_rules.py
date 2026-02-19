@@ -41,30 +41,67 @@ NOMS_RGDU = [
 
 
 def _extract_fields(bulletin: dict):
-    """Parcourt les lignes d'un bulletin et retourne (brut, base_plafond, val_rgdu)."""
+    """
+    Parcourt les lignes d'un bulletin et retourne (brut, base_plafond, val_rgdu).
+    Compatible ancienne et nouvelle structure JSON.
+    """
     brut = 0.0
     base_plafond = 0.0
     val_rgdu = 0.0
 
-    lignes = bulletin.get("table", {}).get("lignes", [])
+    table = bulletin.get("table", {})
+
+    # Support ancien format (lignes) et nouveau format (rows)
+    lignes = table.get("lignes") or table.get("rows") or []
+
     for ligne in lignes:
-        intitule = ligne.get("intitule", "")
+        # Ancien format
+        intitule = ligne.get("intitule")
         salarie = ligne.get("salarie", {}) or {}
         employeur = ligne.get("employeur", {}) or {}
 
-        if intitule in NOMS_BRUT:
-            brut = salarie.get("montant") or ligne.get("base", 0.0) or 0.0
+        # Nouveau format
+        libelle = ligne.get("libelle")
+        numero = ligne.get("numero")
 
-        if intitule in NOMS_PLAFOND:
-            base_plafond = salarie.get("base") or ligne.get("base", 0.0) or 0.0
+        nom_ligne = intitule or libelle or ""
 
-        if intitule in NOMS_RGDU:
-            v = salarie.get("montant")
-            if v is None:
-                v = employeur.get("montant", 0.0)
-            val_rgdu = v or 0.0
+        # -------------------------------
+        # EXTRACTION BRUT
+        # -------------------------------
+        if nom_ligne in NOMS_BRUT or numero == "10000":
+            brut = (
+                salarie.get("montant")
+                or ligne.get("montant")
+                or ligne.get("base", 0.0)
+                or 0.0
+            )
+
+        # -------------------------------
+        # EXTRACTION PLAFOND SS
+        # -------------------------------
+        if nom_ligne in NOMS_PLAFOND:
+            base_plafond = (
+                salarie.get("base")
+                or ligne.get("base", 0.0)
+                or 0.0
+            )
+
+        # -------------------------------
+        # EXTRACTION RGDU
+        # -------------------------------
+        if nom_ligne in NOMS_RGDU:
+            v = (
+                salarie.get("montant")
+                or ligne.get("montant")
+                or ligne.get("montant_patronal")
+                or employeur.get("montant")
+                or 0.0
+            )
+            val_rgdu = v
 
     return float(brut), float(base_plafond), float(val_rgdu)
+
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +154,7 @@ def analyze_all_bulletins(bulletins: list, smic_ref: float = SMIC_REF_DEFAULT, p
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Analyse un fichier bulletins.json")
-    parser.add_argument("json_path", help="Chemin vers bulletins.json")
+    parser.add_argument("json_path", help="/Users/ines/CDC-CGI/data/json/bulletins_eval.json")
     parser.add_argument("--index", type=int, default=0)
     parser.add_argument("--smic", type=float, default=SMIC_REF_DEFAULT)
     parser.add_argument("--plafond", type=float, default=PLAFOND_SS_DEFAULT)

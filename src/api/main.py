@@ -39,7 +39,7 @@ _parser = _load_module(
     SRC_DIR / "extraction",
     ROOT_DIR / "scripts",
 )
-parse_pdf_to_json = _parser.parse_pdf_to_json
+parse_pdf_to_json = _parser.parse_pdf_multi_bulletins
 
 _rules = _load_module(
     "decision_rules",

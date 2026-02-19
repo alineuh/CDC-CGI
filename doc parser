@@ -1,0 +1,321 @@
+DOCUMENTATION – PARSER PDF BULLETINS (VERSION TABLE PAR COORDONNÉES)
+
+Présentation générale
+
+Ce script permet d’extraire automatiquement des bulletins de paie contenus dans un PDF natif (texte sélectionnable) et de produire un fichier JSON structuré.
+
+Contrairement à une approche basée uniquement sur le texte brut, ce parser s’appuie en partie sur l’extraction de tableaux via pdfplumber (détection des lignes verticales et horizontales), ce qui rend l’extraction plus robuste lorsque le PDF contient un vrai tableau structuré.
+
+Le script gère :
+
+– Plusieurs bulletins dans un même PDF
+– Des bulletins répartis sur plusieurs pages
+– L’extraction structurée des colonnes numériques
+– La conversion des nombres français en float
+– L’extraction partielle de blocs Net et Cumul
+
+ARCHITECTURE GLOBALE
+
+Le script est organisé en 7 blocs principaux :
+
+Utilitaires
+
+Extraction des en-têtes
+
+Définition de la clé d’identification d’un bulletin
+
+Extraction du tableau principal via pdfplumber
+
+Extraction des blocs Net et Cumul
+
+Pipeline multi-pages / multi-bulletins
+
+Point d’entrée (main)
+
+UTILITAIRE – CONVERSION NOMBRE FRANÇAIS
+
+Fonction : fr_float(s)
+
+Rôle :
+
+Convertir un nombre au format français en float Python.
+
+Exemples :
+"3 729,98" → 3729.98
+"762,00" → 762.0
+
+Étapes internes :
+
+– Suppression des espaces
+– Remplacement de la virgule par un point
+– Suppression des caractères non numériques
+– Tentative de conversion float
+
+Si la conversion échoue → retourne None.
+
+Cette fonction est utilisée pour convertir :
+
+– base
+– taux
+– montant
+– taux_patronal
+– montant_patronal
+
+EXTRACTION DES EN-TÊTES
+
+Fonction : extract_header(text)
+
+Le script utilise un ensemble de regex définies dans HEADER_PATTERNS.
+
+Champs extraits :
+
+– periode (du / au)
+– bulletin_num
+– matricule
+– siret
+– ape
+– debut_contrat
+– coefficient
+– echelon (niveau + après_ans)
+– convention_collective
+
+Le texte complet de la page est analysé.
+
+Particularité :
+
+Pour la convention collective, plusieurs correspondances peuvent exister.
+Le script garde la plus longue chaîne détectée.
+
+Limite :
+
+Si une page ne contient pas les informations d’en-tête (cas des pages suivantes), aucun header n’est détecté sur cette page.
+
+IDENTITÉ D’UN BULLETIN
+
+Fonction : bulletin_key(header)
+
+Une clé unique est définie comme :
+
+(matricule, date début période, date fin période, numéro bulletin)
+
+Cette clé permet de déterminer si une page appartient :
+
+– Au bulletin courant
+– À un nouveau bulletin
+
+Fonction : same_bulletin(prev_header, new_header)
+
+Compare les clés si elles sont calculables.
+
+Si l’une des clés est None → la comparaison est considérée comme non fiable.
+
+EXTRACTION DU TABLEAU (COEUR DU SCRIPT)
+
+Fonction : extract_table_from_page(page)
+
+C’est ici que le script est différent de la version précédente.
+
+Méthode utilisée :
+
+pdfplumber avec paramètres :
+
+vertical_strategy = "lines"
+horizontal_strategy = "lines"
+
+Cela signifie :
+
+– Détection des colonnes par lignes verticales
+– Détection des lignes par lignes horizontales
+
+Le script parcourt toutes les tables détectées sur la page.
+
+Filtrage :
+
+Une ligne est considérée valide uniquement si :
+
+– La première colonne contient un numéro
+– Ce numéro est composé de 5 chiffres
+– Ce numéro est purement numérique
+
+Cela permet d’éviter :
+
+– Les lignes d’en-tête
+– Les lignes vides
+– Les blocs explicatifs
+
+Colonnes extraites :
+
+Le script prend uniquement certaines colonnes via COL_INDICES :
+
+Index utilisés :
+0, 2, 3, 5, 6, 7, 8
+
+Ils correspondent à :
+
+numero
+libelle
+base
+taux
+montant
+taux_patronal
+montant_patronal
+
+Les champs numériques sont ensuite convertis en float via fr_float.
+
+Résultat final pour chaque ligne :
+
+{
+"numero": "...",
+"libelle": "...",
+"base": float ou null,
+"taux": float ou null,
+"montant": float ou null,
+"taux_patronal": float ou null,
+"montant_patronal": float ou null
+}
+
+Important :
+
+Cette méthode dépend fortement de la structure du PDF.
+Si les colonnes changent d’ordre, les indices devront être adaptés.
+
+EXTRACTION DES BLOCS NET ET CUMUL
+
+Fonctions :
+
+extract_net_block(text)
+extract_cumul_block(text)
+
+Ces fonctions recherchent via regex :
+
+– Net à payer
+– Cumul Brut
+
+Si trouvés → conversion via fr_float.
+
+Ces blocs sont facultatifs.
+
+PIPELINE MULTI-PAGES / MULTI-BULLETINS
+
+Fonction : parse_pdf_multi_bulletins(pdf_path)
+
+C’est le cœur logique du script.
+
+Comportement :
+
+– Parcourt chaque page du PDF
+– Extrait le header de la page
+– Calcule la clé du bulletin
+
+Cas 1 : Premier bulletin
+→ Création d’un objet bulletin
+
+Cas 2 : Nouvelle page avec clé différente
+→ Le bulletin courant est "flushé"
+→ Un nouveau bulletin est créé
+
+Cas 3 : Nouvelle page sans header exploitable
+→ Considérée comme continuation du bulletin courant
+
+Pour chaque page :
+
+– Les lignes du tableau sont extraites
+– Ajoutées au bulletin courant
+– Les pages sont mémorisées
+– Les blocs net / cumul sont fusionnés (première valeur non nulle conservée)
+
+En fin de parcours :
+
+flush_current() ajoute le dernier bulletin à la liste.
+
+Structure finale d’un bulletin :
+
+{
+"header": { ... },
+"table": {
+"rows": [...],
+"warnings": [...]
+},
+"net": {...},
+"cumul": {...},
+"pages": [1,2,...],
+"errors": []
+}
+
+LIMITES IDENTIFIÉES
+
+Dépendance forte à la structure du tableau
+
+L’extraction repose sur des indices de colonnes fixes.
+
+Si :
+– Une colonne est ajoutée
+– Une colonne disparaît
+– L’ordre change
+
+Le parsing sera incorrect.
+
+Numéro à 5 chiffres obligatoire
+
+Une ligne est acceptée uniquement si la première colonne contient exactement 5 chiffres.
+
+Si la structure change → certaines lignes peuvent être ignorées.
+
+Intitulé se terminant par un chiffre
+
+Limite importante :
+
+Si le libellé (colonne de gauche) se termine par un chiffre,
+il peut y avoir un décalage dans l’extraction des cellules selon la manière dont pdfplumber segmente la ligne.
+
+Dans certains cas :
+
+– Le dernier chiffre du libellé peut être interprété comme appartenant à la colonne suivante.
+– Cela peut décaler la base ou le taux.
+
+Impact :
+
+Certaines bases secondaires peuvent être incorrectes.
+
+Dans le cadre actuel du projet, ce problème est toléré car ces bases ne sont pas critiques pour les contrôles futurs.
+
+Cependant, cette limite doit être prise en compte si une précision comptable stricte est requise.
+
+PDF scanné non supporté
+
+Le script fonctionne uniquement avec des PDF contenant du texte extractible.
+
+Aucun OCR n’est intégré.
+
+En-tête absent sur certaines pages
+
+Si une page ne contient pas les informations d’en-tête,
+elle est automatiquement considérée comme continuation du bulletin courant.
+
+Cela suppose que les pages sont bien ordonnées.
+
+POINT D’ENTRÉE
+
+Dans le bloc main :
+
+– Le chemin PDF est défini manuellement.
+– Le chemin JSON est défini manuellement.
+– Le dossier de sortie est créé si nécessaire.
+– Les bulletins sont exportés en JSON formaté.
+
+RÉSUMÉ TECHNIQUE
+
+Ce script :
+
+– Parse un PDF multi-bulletins
+– Reconstruit des objets bulletin cohérents
+– Extrait les tableaux via coordonnées réelles
+– Convertit les nombres français
+– Gère la multi-pagination
+– Produit un JSON structuré exploitable
+
+Il constitue une base solide pour :
+
+– Détection automatique d’anomalies
+– Recalcul de montants
+– Analyse réglementaire

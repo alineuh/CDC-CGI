@@ -235,6 +235,4 @@ python models/decision_rules.py data/json/bulletins.json --index 0
 cd src/ui && npm install react-dropzone
 ```
 
----
 
-Projet R&D CEGI × ESILV — A5 2026 · https://github.com/alineuh/CDC-CGI

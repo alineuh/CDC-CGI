@@ -1,21 +1,21 @@
-# 📊 Intelligent Payslip Analysis System
+# Intelligent Payslip Analysis System
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-## 🎯 Project Overview
+## Project Overview
 
 AI-powered system for analyzing French payslips, detecting anomalies, and calculating severance costs.
 
 **R&D Project for CEGI - ESILV A5 Apprentice Track**
 
 ### Key Features
-- 🔍 **PDF Data Extraction**: Automated parsing of payslip PDFs
-- 🤖 **AI Classification**: ML-based valid/invalid detection
-- 📊 **Error Detection**: Identification and explanation of anomalies
-- 💰 **Severance Calculator**: Automated cost calculation for various scenarios
-- 🌐 **Web Interface**: User-friendly dashboard
-- 🔌 **REST API**: Easy integration capabilities
+- **PDF Data Extraction**: Automated parsing of payslip PDFs
+- **AI Classification**: ML-based valid/invalid detection
+- **Error Detection**: Identification and explanation of anomalies
+- **Severance Calculator**: Automated cost calculation for various scenarios
+- **Web Interface**: User-friendly dashboard
+- **REST API**: Easy integration capabilities
 
 ## 🛠 Tech Stack
 
@@ -26,14 +26,14 @@ AI-powered system for analyzing French payslips, detecting anomalies, and calcul
 - **Frontend**: React
 - **Deployment**: Docker, Docker Compose
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Python 3.11 or higher
 - Docker & Docker Compose
 - Git
 - 4GB RAM minimum
 
-## ⚙️ Quick Start
+## Quick Start
 ```bash
 # Clone the repository
 git clone git@github.com:alineuh/CDC-CGI.git
@@ -58,7 +58,7 @@ docker-compose up -d
 # UI: http://localhost:3000
 ```
 
-## 📁 Project Structure
+## Project Structure
 ```
 CDC-CGI/
 ├── docs/               # Documentation
@@ -78,7 +78,7 @@ CDC-CGI/
 └── scripts/          # Utility scripts
 ```
 
-## 🧪 Testing
+## Testing
 ```bash
 # Run all tests
 pytest
@@ -90,21 +90,21 @@ pytest --cov=src tests/
 pytest tests/unit/test_extraction.py
 ```
 
-## 📚 Documentation
+## Documentation
 
 - [Architecture Overview](docs/architecture.md)
 - [Data Flow Diagram](docs/data-flow.md)
 - [API Documentation](docs/api-documentation.md)
 - [Development Guide](docs/development.md)
 
-## 🎯 Project Deliverables
+## Project Deliverables
 
 - ✅ Source code (structured Git repository)
 - ✅ Functional web interface (deployed)
 - ✅ Technical documentation
 - ✅ Oral presentation with demo
 
-## 📊 Evaluation Criteria
+## Evaluation Criteria
 
 - **Technical Robustness** (30%): Success rate on test scenarios
 - **Explainability** (25%): Clear error explanations and traceability
@@ -112,7 +112,7 @@ pytest tests/unit/test_extraction.py
 - **Code Quality** (20%): Documentation, testing, structure
 - **Innovation** (10%): Original approach and features
 
-## 👥 Team Members
+## Team Members
 
 | Name | Role | GitHub |
 |------|------|--------|
@@ -122,7 +122,7 @@ pytest tests/unit/test_extraction.py
 | TBD | Frontend Dev | [@username] |
 | TBD | DevOps | [@username] |
 
-## 📅 Project Timeline
+## Project Timeline
 
 - **Day 1 (Monday)**: Architecture & PDF Extraction
 - **Day 2 (Tuesday)**: Classification Model
@@ -130,7 +130,7 @@ pytest tests/unit/test_extraction.py
 - **Day 4 (Thursday)**: Integration & API
 - **Day 5 (Friday)**: Presentation & Demo
 
-## 🤝 Contributing
+## Contributing
 
 1. Create a feature branch (`git checkout -b feature/AmazingFeature`)
 2. Commit your changes (`git commit -m 'feat: Add some AmazingFeature'`)
@@ -153,11 +153,11 @@ pytest tests/unit/test_extraction.py
 - `test:` - Adding tests
 - `chore:` - Maintenance
 
-## 📝 License
+## License
 
 Proprietary - CEGI © 2026
 
-## 📧 Contact
+## Contact
 
 Project Link: [https://github.com/alineuh/CDC-CGI](https://github.com/alineuh/CDC-CGI)
 
